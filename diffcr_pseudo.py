@@ -50,7 +50,7 @@ def select_topk_and_remaining_tokens(x, token_weights, k, C):
 
 class PixArtBlock(nn.Module):
 
-    def __init__(self, hidden_size, routing=True, mod_ratio=0, diffcr=True, mod_granularity=0.01, **block_kwargs):
+    def __init__(self, hidden_size, routing=True, mod_ratio=0, diffcr=True, **block_kwargs):
         super().__init__()
 
         """Initialize the PixArt block (Omitted)."""
@@ -91,7 +91,7 @@ class PixArtBlock(nn.Module):
         # Return the closest bin value
         return self.kept_ratio_candidate[closest_index]
 
-    def forward(self, x, y, t, mask=None, timestep=0, T=0):
+    def forward(self, x, y, t):
 
         B, N, C = x.shape
 
@@ -158,8 +158,7 @@ class PixArtBlock(nn.Module):
             else:
                 
                 kept_ratio = torch.clamp(self.diff_ratio, 0.1, 1.0)
-                nearest_bins, indices = self.find_nearest_bins(kept_ratio)
-                kept_ratio = nearest_bins[0]
+                kept_ratio = self.find_closest_bin(kept_ratio)
 
                 capacity = ste_ceil(kept_ratio*N).to(torch.int32)
                 k =  torch.min(capacity, torch.tensor(N, device=x.device))
